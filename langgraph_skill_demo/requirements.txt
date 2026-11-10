@@ -1,0 +1,6 @@
+langgraph>=1.0
+openai>=2.0
+pydantic>=2.0
+PyYAML>=6.0
+# Install official text environment separately when using --mode alfworld:
+# pip install alfworld

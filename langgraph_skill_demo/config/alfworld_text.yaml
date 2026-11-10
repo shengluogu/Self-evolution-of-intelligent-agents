@@ -1,0 +1,21 @@
+# Minimal keys consumed by the official AlfredTWEnv. Data paths are set by the adapter.
+dataset:
+  data_path: unused
+  eval_id_data_path: unused
+  eval_ood_data_path: unused
+  num_train_games: -1
+  num_eval_games: -1
+logic:
+  domain: unused
+  grammar: unused
+env:
+  type: AlfredTWEnv
+  domain_randomization: false
+  task_types: [1, 2, 3, 4, 5, 6]
+  goal_desc_human_anns_prob: 0.0
+  expert_type: handcoded
+general:
+  training_method: dagger
+dagger:
+  training:
+    max_nb_steps_per_episode: 50

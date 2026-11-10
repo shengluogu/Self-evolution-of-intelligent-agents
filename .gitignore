@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local ALFWorld run artifacts
+/langgraph_skill_demo/logs/
+/langgraph_skill_demo/data/
