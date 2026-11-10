@@ -30,11 +30,19 @@ alfworld-download
 ## 运行
 
 ```bash
+# 检查 Agent Loop 和 A/B 接口的单元测试
 python -m unittest test_agent_loop.py
+
+# 输出 LangGraph 的 Mermaid 流程图
 python main.py --graph
+
+# 不调用模型，用两轮模拟任务检查执行流程
 python main.py --mode mock --episodes 2
 
+# 设置真实运行所需的 DeepSeek API Key
 export DEEPSEEK_API_KEY='你的 Key'
+
+# 在 valid_seen 运行两项任务，每项最多 30 步；三个 hook 依次接入 A 检索、B 提取、A 保存
 python main.py --mode alfworld --split valid_seen --episodes 2 --max-steps 30 \
   --search-hook a_module:search_skill \
   --extract-hook b_module:extract_skill \
