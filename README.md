@@ -1,4 +1,6 @@
 # 智能体自进化
+## 任务分工
+<img width="547" height="397" alt="b77f269f855a45da2449e76db6b26cb8" src="https://github.com/user-attachments/assets/ee8ed174-b54a-49c3-9ad9-16a3dd984d1d" />
 
 ## 模块
 
