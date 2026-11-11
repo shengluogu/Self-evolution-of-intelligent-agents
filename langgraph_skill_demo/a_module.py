@@ -1,7 +1,7 @@
 """同学 A 的 hook 入口：
 --search-hook a_module:search_skill --extract-hook a_module:extract_skill --save-hook a_module:save_skill
 
-extract_skill 为接口存根（实现待接手同学补全，见 skill_tools/extract_tool.py）。
+extract_skill 由同学 B 实现。
 """
 
 from skill_tools.extract_tool import extract_skill

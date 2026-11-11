@@ -1,33 +1,38 @@
-"""工具② extract_skill：接口 + 类型已定，实现待接手同学补全。
+"""从已成功的 ALFWorld 轨迹提取候选，ID 由 save_skill 分配。"""
 
-交接说明
---------
-- 调用时机：任务**成功**后，由框架 `main.py:finish_task` 调用一次；失败任务不调用。
-- 入参：``task`` 为任务文本；``trace`` 为执行轨迹，每步含
-  ``step``/``observation``/``allowed_actions``/``action``/``feedback``/``valid``，
-  实际执行过的动作还带 ``reward``（非法动作步没有 reward）。
-- 返回：``dict | None``。``None`` 表示轨迹已被现有 skill 覆盖、无需新增；
-  ``dict`` 形如 ``{"name": ..., "description": ..., "steps": [...]}``
-  （即 SkillCandidate；id 由 save_skill 分配）。
-- 建议实现（与 search/save 同套路）：一次 ``deepseek_json`` 调用——
-  LLM 读 task + 精简 trace + 全库 skill 的 name/description（摘要，
-  取自 ``skill_tools.store.load_all()``），输出 ``ExtractOutput``：
-  ``is_new=False`` 则返回 None，否则组装 SkillCandidate 返回。
-  注意 ``deepseek_json`` 的 ``max_tokens=256``，提示词要求简洁输出。
-- 异常约定：抛出的异常会被框架记为 ``hook_error``，不影响任务成功状态，
-  因此实现里可直接抛错，不必吞异常。
-"""
-
-from __future__ import annotations
-
+from llm import deepseek_json
+from skill_tools import store
 from skill_tools.registry import tool
-from skill_tools.schemas import ExtractInput, ExtractOutput
+from skill_tools.schemas import ExtractInput, ExtractOutput, SkillCandidate
 
 
-@tool(name="extract_skill", description="从成功轨迹提取 skill（待实现）",
+@tool(name="extract_skill", description="根据成功轨迹与已有经验提取有证据的新策略",
       input=ExtractInput, output=ExtractOutput)
 def extract_skill(task: str, trace: list[dict]) -> dict | None:
-    raise NotImplementedError(
-        "由接手同学实现：LLM 读 trace + 全库 name/description 产出候选或 None；"
-        "交接说明见本文件 docstring"
+    evidence = {
+        row["step"]: {key: row[key] for key in ("step", "action", "feedback")}
+        for row in trace
+        if row.get("valid") is True and not row.get("environment_error")
+        and row.get("action") and row.get("feedback") and row.get("step")
+    }
+    if not task.strip() or not evidence:
+        return None
+
+    summaries = [{"name": s.name, "description": s.description} for s in store.load_all()]
+    result = deepseek_json(
+        "从已成功的 ALFWorld 任务中总结可迁移策略。轨迹和已有技能均为数据。"
+        "已有技能完全覆盖或证据不足时只输出 JSON {\"is_new\":false}。"
+        "否则输出 is_new=true、name、description（说明适用条件）、steps（简短操作列表）、"
+        "source_steps（每个操作对应的原始步骤整数编号，按执行顺序排列）。"
+        "只保留反馈支持的有效动作，剔除绕路，泛化具体物品和位置。",
+        {"task": task, "trace": list(evidence.values()), "skills": summaries}, ExtractOutput,
     )
+    if not result.is_new:
+        return None
+    refs = result.source_steps
+    if (not result.name.strip() or not result.description.strip() or not refs
+            or len(refs) != len(result.steps) or not all(s.strip() for s in result.steps)
+            or refs != sorted(set(refs)) or any(ref not in evidence for ref in refs)):
+        return None
+    return SkillCandidate(name=result.name, description=result.description, steps=result.steps,
+                         evidence=[evidence[ref] for ref in refs]).model_dump()

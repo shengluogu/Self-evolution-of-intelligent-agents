@@ -46,6 +46,7 @@ class ExtractOutput(BaseModel):
     name: str = ""
     description: str = ""
     steps: list[str] = []
+    source_steps: list[int] = []
 
 
 class SaveInput(BaseModel):

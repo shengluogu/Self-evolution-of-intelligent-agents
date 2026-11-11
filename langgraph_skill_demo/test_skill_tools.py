@@ -118,10 +118,9 @@ class SearchToolTests(unittest.TestCase):
                 search_skill("any task")
 
 
-class ExtractStubTests(unittest.TestCase):
-    def test_stub_raises_not_implemented(self):
-        with self.assertRaises(NotImplementedError):
-            extract_skill("put an apple in the basket", [{"step": 1}])
+class ExtractContractTests(unittest.TestCase):
+    def test_incomplete_trace_is_skipped(self):
+        self.assertIsNone(extract_skill("put an apple in the basket", [{"step": 1}]))
 
     def test_signature_matches_contract(self):
         sig = inspect.signature(extract_skill)
@@ -135,7 +134,7 @@ class ExtractStubTests(unittest.TestCase):
     def test_io_models_fields(self):
         self.assertEqual(set(ExtractInput.model_fields), {"task", "trace"})
         self.assertEqual(set(ExtractOutput.model_fields),
-                         {"is_new", "name", "description", "steps"})
+                         {"is_new", "name", "description", "steps", "source_steps"})
 
 
 class SaveToolTests(unittest.TestCase):

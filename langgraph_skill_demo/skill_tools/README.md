@@ -10,7 +10,7 @@ cd langgraph_skill_demo
 export DEEPSEEK_API_KEY='你的 Key'  # 或写入本目录 .env（已 gitignore，勿提交）
 
 # 单测（fake LLM，离线）
-python -m unittest test_skill_tools.py test_search_tool.py test_extract_tool.py test_save_tool.py
+python -m unittest discover -v
 
 # mock 模式（禁 save）：验证检索接入
 python main.py --mode mock --episodes 2 --search-hook a_module:search_skill
@@ -27,7 +27,7 @@ python main.py --mode alfworld --split valid_seen --episodes 2 --max-steps 30 \
 | 工具 | 文件 | 状态 | 行为 |
 | --- | --- | --- | --- |
 | `search_skill` | `search_tool.py` | ✅ | LLM 读全库 name/description 挑相关 skill；库空返回 `[]` 不调 LLM |
-| `extract_skill` | `extract_tool.py` | 🔲 存根 | 接口/类型已定，实现待接手（交接说明见该文件 docstring） |
+| `extract_skill` | `extract_tool.py` | 已接入 | 对照已有摘要与成功轨迹，返回有逐步证据的新候选，已有经验完全覆盖时跳过 |
 | `save_skill` | `save_tool.py` | ✅ | 一次 LLM 调用查重并产出最终 skill；无重复新建（新 id），有重复合并进第一条（保留其 id、删多余文件） |
 
 ## Skill 格式
@@ -76,4 +76,3 @@ def xxx(...): ...
 
 - 框架契约：search 抛异常任务照跑（记 `skill_errors`）；extract/save 抛异常记 `hook_error`，不翻案任务结果
 - `--mode mock` 禁止挂 `--save-hook`（main.py 现有约束）
-- extract 存根挂载后真实运行会显示 `skill_status: hook_error`，属预期
