@@ -16,14 +16,11 @@ from pathlib import Path
 from typing import Any, Callable, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
-from openai import OpenAI
 from pydantic import BaseModel
 
 from environments.alfworld_adapter import ALFWorldAdapter, MockEnvironment, Snapshot
+from llm import deepseek_json
 from skill_hooks import SkillHooks
-
-
-MODEL_NAME = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
 
 
 class ActionChoice(BaseModel):
@@ -51,27 +48,6 @@ class State(TypedDict, total=False):
     skill_status: str
     skill_errors: list[str]
     error: str | None
-
-
-def deepseek_json(system_prompt: str, payload: dict[str, Any], schema: type[BaseModel]) -> BaseModel:
-    """Keep the original DeepSeek JSON + Pydantic boundary for action selection."""
-    api_key = os.getenv("DEEPSEEK_API_KEY")
-    if not api_key:
-        raise RuntimeError("请先设置 DEEPSEEK_API_KEY，或使用 --mode mock 验证流程")
-    response = OpenAI(api_key=api_key, base_url="https://api.deepseek.com", timeout=60.0,
-                      max_retries=2).chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
-        ],
-        response_format={"type": "json_object"},
-        max_tokens=256,
-    )
-    content = response.choices[0].message.content
-    if not content or not content.strip():
-        raise ValueError("DeepSeek 返回空 JSON 内容")
-    return schema.model_validate_json(content)
 
 
 def choose_action_with_deepseek(state: State) -> str:
