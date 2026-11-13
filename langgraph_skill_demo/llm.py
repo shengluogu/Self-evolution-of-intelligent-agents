@@ -45,7 +45,10 @@ def deepseek_json(system_prompt: str, payload: dict[str, Any], schema: type[Base
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
         ],
         response_format={"type": "json_object"},
-        max_tokens=256,
+        # Short structured decisions do not need the model's default thinking mode.
+        # Reserve enough output for a complete extracted Skill JSON object.
+        max_tokens=1024,
+        extra_body={"thinking": {"type": "disabled"}},
     )
     content = response.choices[0].message.content
     if not content or not content.strip():

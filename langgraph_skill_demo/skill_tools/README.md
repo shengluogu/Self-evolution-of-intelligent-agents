@@ -16,7 +16,7 @@ python -m unittest discover -v
 python main.py --mode mock --episodes 2 --search-hook a_module:search_skill
 
 # 真实 ALFWorld 全链路
-python main.py --mode alfworld --split valid_seen --episodes 2 --max-steps 30 \
+python main.py --mode alfworld --split valid_seen --episodes 2 --max-steps 100 \
   --search-hook a_module:search_skill \
   --extract-hook a_module:extract_skill \
   --save-hook a_module:save_skill
@@ -58,7 +58,7 @@ from skill_tools.registry import tool
 def xxx(...): ...
 ```
 
-4. 需要 LLM 时 `from llm import deepseek_json`（JSON mode + Pydantic 校验，`DEEPSEEK_API_KEY`/`DEEPSEEK_MODEL` 环境变量，`.env` 自动加载；`max_tokens=256`，提示词要求简洁）
+4. 需要 LLM 时 `from llm import deepseek_json`（JSON mode + Pydantic 校验，`DEEPSEEK_API_KEY`/`DEEPSEEK_MODEL` 环境变量，`.env` 自动加载；非思考模式、`max_tokens=1024`）
 5. 需要存取库时 `from skill_tools import store`（`load_all/save/delete/next_id`）
 6. 补离线单测：`patch("skill_tools.xxx_tool.deepseek_json", ...)` 注入 fake LLM
 

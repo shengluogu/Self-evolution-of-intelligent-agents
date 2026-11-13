@@ -5,3 +5,4 @@
 ## 模块
 
 - [同学 C：Agent Loop 与 ALFWorld 文本环境](langgraph_skill_demo/README.md)
+- [中期报告与真实任务结果](midterm_report/智能体Skill自进化_技术创新报告.md)

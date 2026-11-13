@@ -75,7 +75,7 @@ def choose_first_legal_action(state: State) -> str:
 
 
 def build_graph(environment: Any, hooks: SkillHooks, chooser: Callable[[State], str],
-                max_steps: int = 30):
+                max_steps: int = 100):
     if max_steps < 1:
         raise ValueError("max_steps 必须大于零")
 
@@ -209,7 +209,7 @@ def main() -> None:
     parser.add_argument("--graph", action="store_true", help="输出 LangGraph Mermaid 流程图")
     parser.add_argument("--mode", choices=["mock", "alfworld"], default="mock")
     parser.add_argument("--episodes", type=int, default=1)
-    parser.add_argument("--max-steps", type=int, default=30)
+    parser.add_argument("--max-steps", type=int, default=100)
     parser.add_argument("--alfworld-data", default=os.getenv("ALFWORLD_DATA", str(Path.home() / ".cache" / "alfworld")))
     parser.add_argument("--alfworld-config", default=str(Path(__file__).parent / "config" / "alfworld_text.yaml"))
     parser.add_argument("--split", choices=["valid_seen", "valid_unseen"], default="valid_seen")
