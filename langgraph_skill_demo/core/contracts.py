@@ -8,9 +8,9 @@ Action = str | dict[str, Any]
 class Snapshot:
     task: str
     observation: str
-    allowed_actions: list[str]
-    task_id: str
-    split: str
+    allowed_actions: list[str] = field(default_factory=list)
+    task_id: str = ""
+    split: str = ""
     done: bool = False
     won: bool = False
     reward: float = 0.0

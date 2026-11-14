@@ -92,12 +92,18 @@ def build_graph(environment: Environment, hooks: SkillHooks, chooser: Callable[[
             "observation": state["observation"],
             "allowed_actions": list(state["allowed_actions"]),
             "action": action,
+            "action_spec": state.get("action_spec", {}),
         }
         if state["status"] in {"no_legal_actions", "model_error"}:
             record.update({"feedback": state["error"], "valid": False})
             return {"trace": [*state["trace"], record], "step_count": count,
                     "done": True, "success": False}
-        validation = environment.validate_action(action)
+        try:
+            validation = environment.validate_action(action)
+        except Exception as exc:
+            record.update({"feedback": str(exc), "valid": False, "environment_error": True})
+            return {"trace": [*state["trace"], record], "step_count": count,
+                    "status": "environment_error", "done": True, "success": False, "error": str(exc)}
         if not validation.valid:
             record["feedback"] = validation.reason
             record["valid"] = False

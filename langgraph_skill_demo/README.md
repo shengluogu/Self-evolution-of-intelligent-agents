@@ -1,15 +1,15 @@
 # 同学 C：ALFWorld Agent Loop
 
-Agent Loop 和 A/B 接口已写好；A/B 正式模块及真实 Skill 复用尚未验收。
+Agent、环境与 Skill 已拆分；架构与扩展方式见 [架构说明](ARCHITECTURE.md)。现有 ALFWorld CLI 和三个 hook 签名保持兼容。
 
 ## 对接接口
 
-将 `a_module.py`、`b_module.py` 放在本目录，提供以下函数：
+现有 `a_module.py` 提供以下三个入口，也可用 `module:function` 注入其他实现：
 
 | 负责人 | 启动参数 | 函数签名 |
 | --- | --- | --- |
 | A 检索 | `--search-hook a_module:search_skill` | `search_skill(task: str) -> list[dict]` |
-| B 提取 | `--extract-hook b_module:extract_skill` | `extract_skill(task: str, trace: list[dict]) -> dict \| None` |
+| B 提取 | `--extract-hook a_module:extract_skill` | `extract_skill(task: str, trace: list[dict]) -> dict \| None` |
 | A 保存 | `--save-hook a_module:save_skill` | `save_skill(candidate: dict) -> Any` |
 
 调用顺序：A 检索 → C 执行任务 → 成功时 B 提取 → A 保存。B 的 `trace` 每步包含 `step`、`observation`、`allowed_actions`、`action`、`feedback`、`valid`；执行过的动作还包含 `reward`。
@@ -31,7 +31,7 @@ alfworld-download
 
 ```bash
 # 检查 Agent Loop 和 A/B 接口的单元测试
-python -m unittest test_agent_loop.py
+python -m unittest discover -q
 
 # 输出 LangGraph 的 Mermaid 流程图
 python main.py --graph
@@ -45,7 +45,7 @@ export DEEPSEEK_API_KEY='你的 Key'
 # 在 valid_seen 运行两项任务，每项最多 30 步；三个 hook 依次接入 A 检索、B 提取、A 保存
 python main.py --mode alfworld --split valid_seen --episodes 2 --max-steps 30 \
   --search-hook a_module:search_skill \
-  --extract-hook b_module:extract_skill \
+  --extract-hook a_module:extract_skill \
   --save-hook a_module:save_skill
 ```
 

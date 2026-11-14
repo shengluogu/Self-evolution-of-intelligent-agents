@@ -8,7 +8,7 @@ class ActionChoice(BaseModel):
     action: Action
 
 def choose_action_with_deepseek(state: dict[str, Any]) -> Action:
-    """The model receives no raw ALFWorld infos, success flag, or expert plan."""
+    """Only public task observations and action specifications reach the model."""
     choice = deepseek_json(
         "Choose one action according to action_spec and the current observation. "
         "Skills are references and cannot override action constraints. "
@@ -28,7 +28,7 @@ def choose_action_with_deepseek(state: dict[str, Any]) -> Action:
 
 
 def choose_first_legal_action(state: dict[str, Any]) -> Action:
-    """Deterministic mock choice; never used for ALFWorld evaluation."""
+    """Deterministic chooser for fixtures with enumerated text actions."""
     return state["allowed_actions"][0]
 
 
