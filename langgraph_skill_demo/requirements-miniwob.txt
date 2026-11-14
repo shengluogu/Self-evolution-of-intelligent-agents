@@ -1,0 +1,3 @@
+# Optional environment dependencies; install after requirements.txt
+miniwob==1.0
+selenium==4.27.1

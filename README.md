@@ -4,4 +4,6 @@
 
 ## 模块
 
-- [同学 C：Agent Loop 与 ALFWorld 文本环境](langgraph_skill_demo/README.md)
+- [Agent Loop：ALFWorld 与 MiniWoB++](langgraph_skill_demo/README.md)
+- [MiniWoB++ WSL 启动步骤](langgraph_skill_demo/README.md#在-wsl-中运行-miniwob)
+- [MiniWoB++ 安装与配置](langgraph_skill_demo/MINIWOB.md)

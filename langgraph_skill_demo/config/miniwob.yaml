@@ -1,0 +1,4 @@
+# Wall-clock budget includes model inference; original MiniWoB timing is extended.
+wait_ms: 150
+episode_timeout_ms: 120000
+data_mode: test

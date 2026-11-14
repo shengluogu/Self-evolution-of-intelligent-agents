@@ -1,0 +1,10 @@
+{
+  "id": "skill-0001",
+  "name": "put-item-in-basket",
+  "description": "把物品放进容器类任务：先找到并拿起物品，再移动到容器处放入。适用于 put/place something into something 的任务。",
+  "steps": [
+    "locate the target item and go to it",
+    "take the item from its location",
+    "go to the container and put the item in it"
+  ]
+}
