@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from core.contracts import Action, Snapshot, ValidationResult
+from environments.alfworld_tools import ALFWorldTools
 
 
 def _task_from_observation(observation: str) -> str:
@@ -48,6 +49,7 @@ class ALFWorldAdapter:
         if not official.game_files:
             raise RuntimeError(f"ALFWorld 在 {split} 中未找到可运行游戏，请检查下载数据")
         self._env = official.init_env(batch_size=1)
+        self.tools = ALFWorldTools(self._env)
         self._split = split
         self._task = ""
         self._task_id = ""
@@ -56,11 +58,13 @@ class ALFWorldAdapter:
     def _snapshot(self, observations: Any, infos: dict[str, Any], *, done: bool, reward: float) -> Snapshot:
         observation = str(observations[0])
         actions = [str(action) for action in infos["admissible_commands"][0]]
-        self._allowed_actions = actions
+        if not hasattr(self, "tools"):
+            self.tools = ALFWorldTools(getattr(self, "_env", None))
+        self.tools.update(actions)
         # Explicit allowlist: extra.expert_plan and every other internal field stay private.
         won = bool(infos.get("won", [False])[0])
         return Snapshot(self._task, observation, actions, self._task_id, self._split, done, won, reward, terminated=done,
-                        action_spec={"kind": "text", "instruction": "Select an exact allowed_actions entry"},
+                        action_spec=self.tools.action_spec(),
                         metadata={"environment": "alfworld", "split": self._split})
 
     def reset(self) -> Snapshot:
@@ -72,13 +76,12 @@ class ALFWorldAdapter:
         return self._snapshot(observations, infos, done=False, reward=0.0)
 
     def validate_action(self, action: Action) -> ValidationResult:
-        valid = isinstance(action, str) and action in self._allowed_actions
-        return ValidationResult(valid, "" if valid else "Choose a current admissible command")
+        return self.tools.validate(action)
 
-    def step(self, action: str) -> Snapshot:
+    def step(self, action: Action) -> Snapshot:
         if self._done:
             raise RuntimeError("任务已结束，请先 reset()")
-        observations, rewards, dones, infos = self._env.step([action])
+        observations, rewards, dones, infos = self.tools.execute(action)
         self._done = bool(dones[0])
         return self._snapshot(observations, infos, done=self._done, reward=float(rewards[0]))
 
