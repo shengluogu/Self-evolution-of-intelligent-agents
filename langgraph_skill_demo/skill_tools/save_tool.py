@@ -39,15 +39,28 @@ def save_skill(candidate: dict) -> dict:
         SaveOutput,
     )
     known = {s.id for s in library}
+    candidate_metadata = dict(draft.model_extra or {})
+    for key in ("id", "name", "description", "steps"):
+        candidate_metadata.pop(key, None)
     duplicates = [i for i in verdict.duplicate_ids if i in known]
     if not duplicates:
         saved = store.save(Skill(id=store.next_id(), name=verdict.name,
-                                 description=verdict.description, steps=verdict.steps))
+                                 description=verdict.description, steps=verdict.steps, **candidate_metadata))
         return {"action": "created", "id": saved.stem}
 
     keep_id = duplicates[0]
+    metadata = {}
+    evidence = []
+    for existing in library:
+        if existing.id in duplicates:
+            metadata.update(existing.model_extra or {})
+            evidence.extend((existing.model_extra or {}).get("evidence", []))
+    metadata.update(candidate_metadata)
+    evidence.extend(candidate_metadata.get("evidence", []))
+    if evidence:
+        metadata["evidence"] = [item for index, item in enumerate(evidence) if item not in evidence[:index]]
     store.save(Skill(id=keep_id, name=verdict.name,
-                     description=verdict.description, steps=verdict.steps))
+                     description=verdict.description, steps=verdict.steps, **metadata))
     for extra in duplicates[1:]:
         store.delete(extra)
     return {"action": "merged", "id": keep_id}
