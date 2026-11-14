@@ -23,6 +23,10 @@ class CountingEnvironment(MockEnvironment):
 
 
 class FailedEnvironment:
+    def validate_action(self, action):
+        from core.contracts import ValidationResult
+        return ValidationResult(action == "go to table")
+
     def reset(self):
         return Snapshot("put an apple in the basket", "You see a table.", ["go to table"], "failed-1", "mock")
 

@@ -13,6 +13,12 @@ SKILLS_DIR = Path(__file__).resolve().parent.parent / "skills"
 _FILENAME = re.compile(r"skill-(\d{4})\.json$")
 
 
+def configure(directory: str | Path) -> None:
+    """Select a library at application assembly time; hooks stay unchanged."""
+    global SKILLS_DIR
+    SKILLS_DIR = Path(directory).expanduser().resolve()
+
+
 def _paths() -> list[Path]:
     if not SKILLS_DIR.is_dir():
         return []
