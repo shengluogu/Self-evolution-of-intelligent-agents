@@ -49,3 +49,13 @@ python main.py --mode alfworld --episodes 1 --max-steps 30 \
 `--graph` 不创建真实环境；即使选择 alfworld 模式，也不要求安装 ALFWorld 或准备数据。运行 Agent 仍需要 requirements.txt 中的基础依赖。
 
 边界测试覆盖结构化动作、非法动作拦截、环境截断、初始终态、无 ALFWorld 时输出图、独立技能目录、元数据保存及结构化证据。既有测试继续覆盖 ALFWorld 接口、专家信息过滤和 Skill 异常隔离。
+
+## 本版验收记录（2026-11-14）
+
+- 46 项离线测试通过，包括原有 36 项和新增 10 项边界测试。
+- 真实 ALFWorld valid_seen：`clean some lettuce and put it in fridge.`，7 步成功。
+- 首次提取曾返回空 JSON；提取调用输出预算由 256 提高到 1024，其他调用默认不变。随后重放成功轨迹，完成真实提取、入库和检索命中。
+- 使用该独立库再次运行真实任务，7 步成功，检索命中 `skill-0001`，Skill 无错误，提取返回 `no_candidate`。已有技能覆盖时不生成新候选是正常路径。
+- 回归库与日志存于本地忽略的 logs/，不修改仓库中的种子技能。
+
+上述验证证明接口与闭环可运行；单项任务回归不代表完整 ALFWorld 成功率评测，也未验证 Web 环境。

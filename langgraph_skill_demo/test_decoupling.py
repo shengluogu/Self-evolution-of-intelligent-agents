@@ -52,6 +52,25 @@ class BoundaryTests(unittest.TestCase):
         self.assertEqual(result["status"], "invalid_action_limit")
         self.assertEqual(result["trace"][0]["feedback"], "Expected activate")
 
+    def test_validation_exception_is_environment_error(self):
+        env = StructuredEnvironment()
+        def broken(action):
+            raise RuntimeError("validator unavailable")
+        env.validate_action = broken
+        result = build_graph(env, SkillHooks(), lambda state: {"op": "activate"}).invoke({})
+        self.assertEqual(result["status"], "environment_error")
+        self.assertEqual(env.calls, 0)
+        self.assertFalse(result["trace"][0]["valid"])
+
+    def test_agent_step_limit_is_not_environment_truncation(self):
+        env = StructuredEnvironment()
+        env.step = lambda action: Snapshot("activate", "still running", action_spec={"op": "activate"})
+        result = build_graph(env, SkillHooks(), lambda state: {"op": "activate"}, 1).invoke({})
+        self.assertEqual(result["status"], "step_limit")
+        self.assertTrue(result["done"])
+        self.assertFalse(result["terminated"])
+        self.assertFalse(result["truncated"])
+
     def test_truncation_skips_extraction(self):
         hooks = SkillHooks()
         hooks.extract = lambda *args: self.fail("must skip truncated task")
@@ -113,5 +132,6 @@ main.main()
                 "skill_tools.extract_tool.deepseek_json", return_value=ExtractOutput(
                     is_new=True, name="submit", description="submit form", steps=["click Submit"], source_steps=[1])) as fake:
             result = extract_skill("submit", [row])
+        self.assertEqual(fake.call_args.kwargs["max_tokens"], 1024)
         self.assertEqual(fake.call_args.args[1]["trace"][0]["observation"], row["observation"])
         self.assertEqual(result["evidence"][0]["action"], {"click": 17})

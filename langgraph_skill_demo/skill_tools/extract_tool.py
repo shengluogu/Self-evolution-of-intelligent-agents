@@ -1,4 +1,4 @@
-"""从已成功的 environment 轨迹提取候选，ID 由 save_skill 分配。"""
+"""从已成功的任务轨迹提取候选，ID 由 save_skill 分配。"""
 
 from llm import deepseek_json
 from skill_tools import store
@@ -25,7 +25,7 @@ def extract_skill(task: str, trace: list[dict]) -> dict | None:
         "return is_new=true, name, description, steps and source_steps (one original step number per step). "
         "Use only feedback-supported valid actions. Generalize task values and temporary identifiers; "
         "describe how to identify action targets from observations, never reuse transient element IDs.",
-        {"task": task, "trace": list(evidence.values()), "skills": summaries}, ExtractOutput,
+        {"task": task, "trace": list(evidence.values()), "skills": summaries}, ExtractOutput, max_tokens=1024,
     )
     if not result.is_new:
         return None

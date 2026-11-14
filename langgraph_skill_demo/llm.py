@@ -32,7 +32,8 @@ _load_env()
 MODEL_NAME = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
 
 
-def deepseek_json(system_prompt: str, payload: dict[str, Any], schema: type[BaseModel]) -> BaseModel:
+def deepseek_json(system_prompt: str, payload: dict[str, Any], schema: type[BaseModel], *,
+                  max_tokens: int = 256) -> BaseModel:
     """Keep the original DeepSeek JSON + Pydantic boundary for action selection."""
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
@@ -45,7 +46,7 @@ def deepseek_json(system_prompt: str, payload: dict[str, Any], schema: type[Base
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
         ],
         response_format={"type": "json_object"},
-        max_tokens=256,
+        max_tokens=max_tokens,
     )
     content = response.choices[0].message.content
     if not content or not content.strip():
