@@ -41,8 +41,14 @@ class MiniWoBTools:
         self._observation = observation
 
     def get_dom(self):
-        return [{key: json_value(element[key]) for key in DOM_KEYS if key in element}
-                for element in self._observation["dom_elements"]]
+        result = []
+        for element in self._observation["dom_elements"]:
+            row = {key: json_value(element[key]) for key in DOM_KEYS if key in element}
+            if "flags" in row:
+                row.update(dict(zip(("focused", "tampered", "targeted", "is_leaf"),
+                                    map(bool, row["flags"]))))
+            result.append(row)
+        return result
 
     def action_spec(self):
         return {"tools": [{"name": name, "parameters": model.model_json_schema()}
@@ -64,7 +70,7 @@ class MiniWoBTools:
             elements = {int(e["ref"]): e for e in self._observation["dom_elements"]}
             if parsed.ref not in elements:
                 return ValidationResult(False, "Unknown ref in current DOM; inspect the latest observation")
-            if parsed.tool == "type_text" and elements[parsed.ref].get("tag", "").lower() not in ("input", "textarea"):
+            if parsed.tool == "type_text" and elements[parsed.ref].get("tag", "").lower().split("_")[0] not in ("input", "textarea"):
                 return ValidationResult(False, "type_text requires an input or textarea")
         if parsed.tool == "type_text" and len(parsed.text) > config.text_max_len:
             return ValidationResult(False, "Text exceeds configured maximum length")

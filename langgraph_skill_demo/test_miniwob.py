@@ -55,6 +55,12 @@ class MiniWoBTests(unittest.TestCase):
         self.assertEqual(json.loads(self.start.observation)["dom_elements"][0]["value"], "old")
         self.assertNotIn("get_dom", [t["name"] for t in self.start.action_spec["tools"]])
 
+    def test_native_input_tag_and_focus_flags(self):
+        self.raw.observation["dom_elements"][0]["tag"] = "input_text"
+        self.env.tools.update(self.raw.observation)
+        self.assertTrue(self.env.validate_action({"tool": "type_text", "ref": 1, "text": "new"}).valid)
+        self.assertFalse(self.env.tools.get_dom()[0]["focused"])
+
     def test_click_mapping(self):
         self.env.step({"tool": "click", "ref": 2})
         self.assertEqual(self.raw.actions, [{"kind": Types.CLICK_ELEMENT, "ref": 2}])
