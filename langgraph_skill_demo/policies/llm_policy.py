@@ -22,7 +22,7 @@ def choose_action_with_deepseek(state: dict[str, Any]) -> Action:
             "history": [{"action": item["action"], "feedback": item["feedback"],
                          "valid": item["valid"]} for item in state["trace"]],
         },
-        ActionChoice,
+        ActionChoice, max_tokens=1024,
     )
     return choice.action
 
