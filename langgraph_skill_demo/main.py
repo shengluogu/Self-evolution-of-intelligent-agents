@@ -12,7 +12,7 @@ from skill_hooks import SkillHooks
 def main() -> None:
     parser = argparse.ArgumentParser(description="ALFWorld 文本环境 Agent Loop")
     parser.add_argument("--graph", action="store_true", help="输出 LangGraph Mermaid 流程图")
-    parser.add_argument("--mode", choices=["mock", "alfworld"], default="mock")
+    parser.add_argument("--mode", choices=["mock", "alfworld", "miniwob"], default="mock")
     parser.add_argument("--episodes", type=int, default=1)
     parser.add_argument("--max-steps", type=int, default=30)
     parser.add_argument("--alfworld-data", default=os.getenv("ALFWORLD_DATA", str(Path.home() / ".cache" / "alfworld")))
@@ -23,6 +23,9 @@ def main() -> None:
     parser.add_argument("--save-hook", help="同学 A 的 module:save_skill")
     parser.add_argument("--log-dir", type=Path, default=Path(__file__).parent / "logs")
     parser.add_argument("--skills-dir", type=Path, help="Independent skill library directory")
+    parser.add_argument("--task", default="click-test-2", help="MiniWoB task name")
+    parser.add_argument("--seed", type=int, default=0, help="MiniWoB initial seed, incremented per episode")
+    parser.add_argument("--miniwob-config", type=Path, default=Path(__file__).parent / "config" / "miniwob.yaml")
     args = parser.parse_args()
     if args.episodes < 1 or args.max_steps < 1:
         parser.error("--episodes 和 --max-steps 必须大于零")
@@ -38,8 +41,21 @@ def main() -> None:
         print(graph.get_graph().draw_mermaid())
         return
     try:
+        miniwob_config = None
+        if args.mode == "miniwob":
+            import yaml
+            miniwob_config = yaml.safe_load(args.miniwob_config.read_text(encoding="utf-8"))
+            if not isinstance(miniwob_config, dict):
+                raise ValueError("MiniWoB config must be a mapping")
+            allowed = {"wait_ms", "episode_timeout_ms", "data_mode"}
+            if set(miniwob_config) - allowed:
+                raise ValueError("Unknown MiniWoB configuration keys")
+            if not args.skills_dir:
+                from skill_tools import store
+                store.configure(Path(__file__).parent / "data" / "miniwob-skills")
         environment = create_environment(args.mode, config_path=args.alfworld_config,
-                                         data_dir=args.alfworld_data, split=args.split)
+                                         data_dir=args.alfworld_data, split=args.split,
+                                         task=args.task, seed=args.seed, miniwob_config=miniwob_config)
     except (FileNotFoundError, ValueError, RuntimeError) as exc:
         parser.error(str(exc))
     try:

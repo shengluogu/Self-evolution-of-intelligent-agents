@@ -117,6 +117,8 @@ def build_graph(environment: Environment, hooks: SkillHooks, chooser: Callable[[
             return {"trace": [*state["trace"], record], "step_count": count,
                     "status": "environment_error", "done": True, "success": False, "error": str(exc)}
         record.update({"feedback": snapshot.observation, "valid": True, "reward": snapshot.reward})
+        if "native_actions" in snapshot.metadata:
+            record["native_actions"] = snapshot.metadata["native_actions"]
         status = "success" if snapshot.finished and snapshot.success else "truncated" if snapshot.truncated else "failed" if snapshot.finished else \
             "step_limit" if count >= max_steps else "running"
         return {
