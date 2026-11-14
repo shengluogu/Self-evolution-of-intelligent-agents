@@ -50,3 +50,7 @@ python main.py --mode alfworld --split valid_seen --episodes 2 --max-steps 30 \
 ```
 
 流程图及详细状态见 [C任务流程图与运行说明.md](C任务流程图与运行说明.md)。
+
+## 环境工具与 MiniWoB++
+
+ALFWorld 已将交互分离为实例级 execute 工具；MiniWoB++ 按环境绑定 click、type_text、press_key。安装、配置、运行及计时说明见 [MiniWoB 接入说明](MINIWOB.md)。

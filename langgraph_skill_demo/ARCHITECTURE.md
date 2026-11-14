@@ -1,6 +1,6 @@
 # Agent、环境与 Skill 分离（第一版）
 
-本版以 `wsy/chenx-integration` 为基线，在 `chenx` 实现。保留原有 LangGraph 主流程、三个 Skill hook 和 ALFWorld 命令行用法，不接入 Web 数据集。
+本版以 `wsy/chenx-integration` 为基线，在 `chenx` 实现。保留原有 LangGraph 主流程、三个 Skill hook 和 ALFWorld 命令行用法，后续 MiniWoB 接入与实例级工具分离见 MINIWOB.md。
 
 ## 边界
 
@@ -59,3 +59,11 @@ python main.py --mode alfworld --episodes 1 --max-steps 30 \
 - 回归库与日志存于本地忽略的 logs/，不修改仓库中的种子技能。
 
 上述验证证明接口与闭环可运行；单项任务回归不代表完整 ALFWorld 成功率评测，也未验证 Web 环境。
+
+## 环境工具分离与 MiniWoB 扩展
+
+- core/tools.py 定义最小 EnvironmentTools 协议；交互工具按环境实例绑定，未添加全局 registry。
+- ALFWorldAdapter 委托 ALFWorldTools 校验与执行；保留字符串兼容。
+- MiniWoBAdapter 与 MiniWoBTools 共享一个原生环境；get_dom 为内部观察能力，其余三个工具进入 action_spec。
+- factory 只创建本次所选环境，MiniWoB 的依赖延迟导入。Skill 工具仍通过原 hooks 独立提供。
+- runner 仅增加可选 native_actions 轨迹字段，没有 MiniWoB 专属节点或分支。

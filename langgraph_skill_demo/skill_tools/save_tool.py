@@ -36,7 +36,7 @@ def save_skill(candidate: dict) -> dict:
     verdict: SaveOutput = deepseek_json(
         _SAVE_PROMPT,
         {"candidate": draft.model_dump(), "skills": [s.model_dump() for s in library]},
-        SaveOutput,
+        SaveOutput, max_tokens=1024,
     )
     known = {s.id for s in library}
     candidate_metadata = dict(draft.model_extra or {})
