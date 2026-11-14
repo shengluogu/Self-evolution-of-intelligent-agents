@@ -3,21 +3,10 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-
-@dataclass(frozen=True)
-class Snapshot:
-    task: str
-    observation: str
-    allowed_actions: list[str]
-    task_id: str
-    split: str
-    done: bool = False
-    won: bool = False
-    reward: float = 0.0
+from core.contracts import Action, Snapshot, ValidationResult
 
 
 def _task_from_observation(observation: str) -> str:
@@ -67,9 +56,12 @@ class ALFWorldAdapter:
     def _snapshot(self, observations: Any, infos: dict[str, Any], *, done: bool, reward: float) -> Snapshot:
         observation = str(observations[0])
         actions = [str(action) for action in infos["admissible_commands"][0]]
+        self._allowed_actions = actions
         # Explicit allowlist: extra.expert_plan and every other internal field stay private.
         won = bool(infos.get("won", [False])[0])
-        return Snapshot(self._task, observation, actions, self._task_id, self._split, done, won, reward)
+        return Snapshot(self._task, observation, actions, self._task_id, self._split, done, won, reward, terminated=done,
+                        action_spec={"kind": "text", "instruction": "Select an exact allowed_actions entry"},
+                        metadata={"environment": "alfworld", "split": self._split})
 
     def reset(self) -> Snapshot:
         observations, infos = self._env.reset()
@@ -78,6 +70,10 @@ class ALFWorldAdapter:
         self._task_id = Path(str(gamefile)).parent.name if gamefile else "unknown"
         self._done = False
         return self._snapshot(observations, infos, done=False, reward=0.0)
+
+    def validate_action(self, action: Action) -> ValidationResult:
+        valid = isinstance(action, str) and action in self._allowed_actions
+        return ValidationResult(valid, "" if valid else "Choose a current admissible command")
 
     def step(self, action: str) -> Snapshot:
         if self._done:
@@ -90,30 +86,6 @@ class ALFWorldAdapter:
         self._env.close()
 
 
-class MockEnvironment:
-    """Clearly labeled three-action fixture for local integration checks."""
 
-    def __init__(self):
-        self._position = 0
-        self._done = False
-
-    def reset(self) -> Snapshot:
-        self._position = 0
-        self._done = False
-        return self._snapshot()
-
-    def _snapshot(self) -> Snapshot:
-        observations = ["You see a table and a basket.", "You are at the table. An apple is here.", "You hold the apple.", "The apple is in the basket."]
-        actions = [["go to table"], ["take apple from table"], ["put apple in basket"], []]
-        return Snapshot("put an apple in the basket", observations[self._position], actions[self._position],
-                        "mock-apple", "mock", self._done, self._done, float(self._done))
-
-    def step(self, action: str) -> Snapshot:
-        if self._done or action not in self._snapshot().allowed_actions:
-            raise ValueError(f"模拟环境不接受动作: {action}")
-        self._position += 1
-        self._done = self._position == 3
-        return self._snapshot()
-
-    def close(self) -> None:
-        pass
+# Compatibility export for existing callers.
+from environments.mock import MockEnvironment
